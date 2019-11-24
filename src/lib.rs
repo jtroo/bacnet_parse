@@ -1,4 +1,4 @@
-//! PLACEHOLDER is a library to parse BACnet bytes into usable Rust structs.
+//! bacnet_parse is a #![no_std] library to parse BACnet bytes into read-only data structures
 //!
 //! Currently handles:
 //! * MS/TP
@@ -23,6 +23,8 @@
 //!
 //! These are opinions, so if you disagree and would like to use nom for parsing, feel free to make
 //! a pull request that includes nom.
+#![no_std]
+
 mod mstp;
 pub use mstp::*;
 
@@ -36,8 +38,8 @@ mod nsdu;
 
 #[derive(Debug)]
 pub enum Error {
-    Length,
-    InvalidValue,
+    Length(&'static str),
+    InvalidValue(&'static str),
     Unknown,
 }
 

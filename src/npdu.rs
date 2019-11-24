@@ -4,12 +4,10 @@ use arrayref::array_ref;
 
 pub fn parse_npdu(slice: &[u8]) -> Result<NPDU, Error> {
     if slice.len() < 3 {
-        println!("npdu len too short");
-        return Err(Error::Length);
+        return Err(Error::Length("npdu len too short"));
     }
     if slice[0] != 0x01 {
-        println!("unhandled npdu version {}", slice[0]);
-        return Err(Error::InvalidValue);
+        return Err(Error::InvalidValue("unhandled npdu version"));
     }
 
     let mut npdu = NPDU::default();
@@ -80,7 +78,7 @@ impl<'a> NPDU<'a> {
             1 => NCPIPriority::Urgent,
             2 => NCPIPriority::CriticalEquip,
             3 => NCPIPriority::LifeSafety,
-            _ => unsafe { std::hint::unreachable_unchecked() },
+            _ => unsafe { core::hint::unreachable_unchecked() },
         }
     }
 
@@ -134,15 +132,13 @@ pub struct NetAddr<'a> {
 impl<'a> NetAddr<'a> {
     fn parse(b: &'a [u8]) -> Result<(&'a [u8], Self), Error> {
         if b.len() < 4 {
-            println!("dsthopcount len err");
-            return Err(Error::Length);
+            return Err(Error::Length("dsthopcount len err"));
         }
         let net = u16::from_be_bytes(*array_ref!(b, 0, 2));
         let addrlen = b[2];
         let rest_of_slice_offset = 3 + addrlen as usize;
         if b.len() < rest_of_slice_offset {
-            println!("dsthopcount len err 2");
-            return Err(Error::Length);
+            return Err(Error::Length("dsthopcount len err 2"));
         }
         let addr = &b[3..3 + addrlen as usize];
         Ok((&b[rest_of_slice_offset..], Self { net, addr }))

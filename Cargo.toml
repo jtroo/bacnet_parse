@@ -1,5 +1,5 @@
 [package]
-name = "placeholder"
+name = "bacnet_parse"
 version = "0.1.0"
 authors = ["Jan Tache <j.andreitabs@gmail.com>"]
 edition = "2018"

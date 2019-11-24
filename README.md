@@ -1,6 +1,6 @@
-# placeholder
+# bacnet_parse
 
-PLACEHOLDER is a library to parse BACnet bytes into usable Rust structs.
+bacnet_parse is a #![no_std] library to parse BACnet bytes into read-only data structures
 
 Currently handles:
 * MS/TP
@@ -13,11 +13,6 @@ Targeting support for:
 To assist parsing BACnet IP or BACnet Ethernet, two recommended libraries are:
 * [pnet](https://crates.io/crates/pnet)
 * [etherparse](https://crates.io/crates/etherparse)
-
-### TODOs
-
-* better error handling
-* more tests
 
 ### Why not use [nom](https://crates.io/crates/nom)?
 

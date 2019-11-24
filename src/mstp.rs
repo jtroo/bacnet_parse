@@ -1,16 +1,14 @@
 use super::npdu::*;
 use super::*;
 use arrayref::array_ref;
-use std::convert::From;
+use core::convert::From;
 
 pub fn parse_mstp_skip_crc_compute(bytes: &[u8]) -> Result<MstpFrameNoCrcs, Error> {
     if bytes.len() < 8 {
-        println!("mstp len err");
-        return Err(Error::Length);
+        return Err(Error::Length("mstp len err"));
     }
     if bytes[0] != 0x55 || bytes[1] != 0xFF {
-        println!("mstp preamble err");
-        return Err(Error::InvalidValue);
+        return Err(Error::InvalidValue("mstp preamble err"));
     }
     let mut frame = MstpFrameNoCrcs::default();
     frame.frame_type = bytes[2].into();
@@ -22,7 +20,7 @@ pub fn parse_mstp_skip_crc_compute(bytes: &[u8]) -> Result<MstpFrameNoCrcs, Erro
     }
     // 10 comes from (header = 8) + (crc = 2)
     if (10 + frame.len) as usize != bytes.len() {
-        println!("mstp len err 2");
+        // error but recoverable
         return Ok(frame);
     }
     if let Ok(npdu) = parse_npdu(&bytes[8..]) {

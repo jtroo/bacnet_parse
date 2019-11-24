@@ -4,24 +4,22 @@ use arrayref::array_ref;
 
 pub fn parse_bvlc(slice: &[u8]) -> Result<BVLC, Error> {
     if slice.len() < 4 {
-        return Err(Error::Length);
+        return Err(Error::Length("insufficient bytes for bvlc"));
     }
     if slice[0] != 0x81 {
-        println!("invalid bvlc type {}", slice[0]);
-        return Err(Error::InvalidValue);
+        return Err(Error::InvalidValue("invalid bvlc type"));
     }
 
     let len = u16::from_be_bytes(*array_ref!(slice, 2, 2));
     if len as usize != slice.len() {
-        println!("Invalid BVLC length");
-        return Err(Error::Length);
+        return Err(Error::Length("inconsistent bvlc length"));
     }
 
     let mut bvlc = BVLC::default();
     bvlc.bfn = slice[1].into();
     let npdu_start_idx: usize = if bvlc.has_ip_port() {
         if slice.len() < 6 {
-            return Err(Error::Length);
+            return Err(Error::Length("insufficient bytes for bvlc ip/port"));
         }
         bvlc.ip_port = Some(array_ref!(slice, 4, 6).into());
         10
@@ -30,7 +28,7 @@ pub fn parse_bvlc(slice: &[u8]) -> Result<BVLC, Error> {
     };
     if bvlc.has_npdu() {
         if slice.len() < npdu_start_idx {
-            return Err(Error::Length);
+            return Err(Error::Length("no bytes for npdu"));
         }
         if let Ok(npdu) = parse_npdu(&slice[npdu_start_idx..]) {
             bvlc.npdu = Some(npdu);
