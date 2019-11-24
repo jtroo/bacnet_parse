@@ -2,6 +2,9 @@
 name = "bacnet_parse"
 version = "0.1.0"
 authors = ["Jan Tache <j.andreitabs@gmail.com>"]
+repository = "https://github.com/jtroo/bacnet_parse"
+description = "no-std BACnet parser"
+license = "MPL-2.0"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
