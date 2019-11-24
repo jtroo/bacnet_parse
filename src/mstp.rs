@@ -3,7 +3,7 @@ use super::*;
 use arrayref::array_ref;
 use std::convert::From;
 
-pub fn parse_mstp_skip_crc_checks(bytes: &[u8]) -> Result<MstpFrameNoCrcs, Error> {
+pub fn parse_mstp_skip_crc_compute(bytes: &[u8]) -> Result<MstpFrameNoCrcs, Error> {
     if bytes.len() < 8 {
         println!("mstp len err");
         return Err(Error::Length);
@@ -32,7 +32,7 @@ pub fn parse_mstp_skip_crc_checks(bytes: &[u8]) -> Result<MstpFrameNoCrcs, Error
 }
 
 pub fn parse_mstp(bytes: &[u8]) -> Result<MstpFrame, Error> {
-    let frame = parse_mstp_skip_crc_checks(bytes)?;
+    let frame = parse_mstp_skip_crc_compute(bytes)?;
     let framelen = bytes.len();
 
     let mut crcs = CRCs::default();
@@ -241,7 +241,7 @@ mod tests {
             0xa8, 0x01, 0x12, 0xba, 0xc0, 0x02, 0x01, 0x6a, 0x0f, 0x0c, 0x00, 0x80, 0x00, 0x0a,
             0x19, 0x55, 0x3e, 0x44, 0x41, 0xe8, 0x00, 0x01, 0x3f, 0x49, 0x09, 0xc9, 0x6f,
         ];
-        let frame = parse_mstp_skip_crc_checks(DATA).unwrap();
+        let frame = parse_mstp_skip_crc_compute(DATA).unwrap();
         assert_eq!(frame.frame_type(), FrameType::BACnetDataExpectingReply);
         assert_eq!(frame.dst_mac(), 12);
         assert_eq!(frame.src_mac(), 127);

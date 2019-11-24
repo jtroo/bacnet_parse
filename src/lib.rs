@@ -34,7 +34,6 @@ pub use npdu::*;
 
 mod nsdu;
 
-
 #[derive(Debug)]
 pub enum Error {
     Length,
