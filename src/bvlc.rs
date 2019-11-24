@@ -3,8 +3,6 @@ use super::Error;
 use arrayref::array_ref;
 
 pub fn parse_bvlc(slice: &[u8]) -> Result<BVLC, Error> {
-    let mut bvlc = BVLC::default();
-
     if slice.len() < 4 {
         return Err(Error::Length);
     }
@@ -12,11 +10,14 @@ pub fn parse_bvlc(slice: &[u8]) -> Result<BVLC, Error> {
         println!("invalid bvlc type {}", slice[0]);
         return Err(Error::InvalidValue);
     }
+
     let len = u16::from_be_bytes(*array_ref!(slice, 2, 2));
     if len as usize != slice.len() {
         println!("Invalid BVLC length");
         return Err(Error::Length);
     }
+
+    let mut bvlc = BVLC::default();
     bvlc.bfn = slice[1].into();
     let npdu_start_idx: usize = if bvlc.has_ip_port() {
         if slice.len() < 6 {
@@ -38,8 +39,6 @@ pub fn parse_bvlc(slice: &[u8]) -> Result<BVLC, Error> {
     Ok(bvlc)
 }
 
-/// Note: fields are private with getters because BVLC is not intended to be constructed manually;
-/// it should only be created by `parse_bvlc`.
 #[derive(Default)]
 pub struct BVLC<'a> {
     bfn: BVLCFunction,

@@ -49,8 +49,6 @@ pub fn parse_npdu(slice: &[u8]) -> Result<NPDU, Error> {
     Ok(npdu)
 }
 
-/// Note: struct has private members with public getters because it is  not meant to be constructed
-/// manually and should only be constructed by `parse_npdu`.
 #[derive(Default)]
 pub struct NPDU<'a> {
     ncpi_control: u8,
