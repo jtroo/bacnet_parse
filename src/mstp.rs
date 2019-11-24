@@ -119,9 +119,11 @@ pub struct CRCs {
 }
 
 impl CRCs {
+    /// Returns the header CRCs: (actual value, re-computed).
     pub fn header(self) -> (u8, u8) {
         (self.header_actual, self.header_expected)
     }
+    /// Returns the data CRCs: (actual value, re-computed).
     pub fn data(self) -> (u16, u16) {
         (self.data_actual, self.data_expected)
     }
@@ -273,5 +275,21 @@ mod tests {
         let (actual, expected) = frame.crcs().data();
         assert_eq!(actual, expected);
         assert_eq!(actual, 0x6fc9);
+    }
+
+    #[test]
+    fn parse_crc_unequal() {
+        const DATA: &[u8] = &[
+            0x55, 0xff, 0x05, 0x0c, 0x7f, 0x00, 0x1f, 0x34, 0x01, 0x0c, 0x00, 0x01, 0x06, 0xc0,
+            0xa8, 0x01, 0x12, 0xba, 0xc0, 0x02, 0x01, 0x6a, 0x0f, 0x0c, 0x00, 0x80, 0x00, 0x0a,
+            0x19, 0x55, 0x3e, 0x44, 0x41, 0xe8, 0x00, 0x01, 0x3f, 0x49, 0x09, 0xc9, 0x6e,
+        ];
+        let frame = parse_mstp(DATA).unwrap();
+        let (actual, expected) = frame.crcs().header();
+        assert_ne!(actual, expected);
+        assert_eq!(actual, 0x34);
+        let (actual, expected) = frame.crcs().data();
+        assert_ne!(actual, expected);
+        assert_eq!(actual, 0x6ec9);
     }
 }
