@@ -22,8 +22,6 @@ impl From<()> for Error {
 #[cfg(test)]
 pub mod test {
     use super::bvlc::*;
-    use super::npdu::*;
-    use super::*;
 
     #[test]
     fn simple_test() {
