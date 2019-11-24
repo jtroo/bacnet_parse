@@ -37,8 +37,8 @@ pub enum NLMType {
     UpdateDistributionKey,
     RequestMasterKey,
     SetMasterKey,
-    ReservedforusebyASHRAE,
-    AvailableforVendorProprietaryMessages,
+    Reserved,
+    Proprietary,
 }
 
 impl From<u8> for NLMType {
@@ -62,8 +62,8 @@ impl From<u8> for NLMType {
             0x0F => Self::UpdateDistributionKey,
             0x10 => Self::RequestMasterKey,
             0x11 => Self::SetMasterKey,
-            0x12..=0x7F => Self::ReservedforusebyASHRAE,
-            0x80..=0xFF => Self::AvailableforVendorProprietaryMessages,
+            0x12..=0x7F => Self::Reserved,
+            0x80..=0xFF => Self::Proprietary,
         }
     }
 }
