@@ -101,6 +101,7 @@ impl<'a> NPDU<'a> {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub enum NCPIPriority {
     LifeSafety,
     CriticalEquip,

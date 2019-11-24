@@ -8,33 +8,63 @@ pub fn parse_mstp_skip_crc_checks(bytes: &[u8]) -> Result<MstpFrameNoCrcs, Error
         println!("mstp len err");
         return Err(Error::Length);
     }
-    Err(Error::Unknown)
+    if bytes[0] != 0x55 || bytes[1] != 0xFF {
+        println!("mstp preamble err");
+        return Err(Error::InvalidValue);
+    }
+    let mut frame = MstpFrameNoCrcs::default();
+    frame.frame_type = bytes[2].into();
+    frame.dst_mac = bytes[3];
+    frame.src_mac = bytes[4];
+    frame.len = u16::from_be_bytes(*array_ref!(bytes, 5, 2));
+    if frame.len == 0 {
+        return Ok(frame);
+    }
+    // 10 comes from (header = 8) + (crc = 2)
+    if (10 + frame.len) as usize != bytes.len() {
+        println!("mstp len err 2");
+        return Ok(frame);
+    }
+    if let Ok(npdu) = parse_npdu(&bytes[8..]) {
+        frame.npdu = Some(npdu);
+    }
+    Ok(frame)
 }
 
 pub fn parse_mstp(bytes: &[u8]) -> Result<MstpFrame, Error> {
     let frame = parse_mstp_skip_crc_checks(bytes)?;
     let framelen = bytes.len();
+
     let mut crcs = CRCs::default();
     crcs.header_actual = bytes[7];
     crcs.header_expected = compute_header_crc(*array_ref!(bytes, 2, 5));
     if framelen > 10 {
         crcs.data_actual = u16::from_le_bytes(*array_ref!(bytes, framelen - 2, 2));
-        crcs.data_expected = compute_data_crc(&bytes[8..framelen-2]);
+        crcs.data_expected = compute_data_crc(&bytes[8..framelen - 2]);
     }
-    Err(Error::Unknown)
+
+    Ok(MstpFrame {
+        frame_type: frame.frame_type,
+        dst_mac: frame.dst_mac,
+        src_mac: frame.src_mac,
+        len: frame.len,
+        npdu: frame.npdu,
+        crcs,
+    })
 }
 
+#[derive(Default)]
 pub struct MstpFrameNoCrcs<'a> {
-    frame_type: u8,
-    dest_mac: u8,
+    frame_type: FrameType,
+    dst_mac: u8,
     src_mac: u8,
     len: u16,
     npdu: Option<NPDU<'a>>,
 }
 
 pub struct MstpFrame<'a> {
-    frame_type: u8,
-    dest_mac: u8,
+    frame_type: FrameType,
+    dst_mac: u8,
     src_mac: u8,
     len: u16,
     crcs: CRCs,
@@ -42,11 +72,11 @@ pub struct MstpFrame<'a> {
 }
 
 impl<'a> MstpFrameNoCrcs<'a> {
-    pub fn frame_type(&self) -> u8 {
+    pub fn frame_type(&self) -> FrameType {
         self.frame_type
     }
-    pub fn dest_mac(&self) -> u8 {
-        self.dest_mac
+    pub fn dst_mac(&self) -> u8 {
+        self.dst_mac
     }
     pub fn src_mac(&self) -> u8 {
         self.src_mac
@@ -60,11 +90,11 @@ impl<'a> MstpFrameNoCrcs<'a> {
 }
 
 impl<'a> MstpFrame<'a> {
-    pub fn frame_type(&self) -> u8 {
+    pub fn frame_type(&self) -> FrameType {
         self.frame_type
     }
-    pub fn dest_mac(&self) -> u8 {
-        self.dest_mac
+    pub fn dst_mac(&self) -> u8 {
+        self.dst_mac
     }
     pub fn src_mac(&self) -> u8 {
         self.src_mac
@@ -97,7 +127,8 @@ impl CRCs {
     }
 }
 
-enum FrameType {
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum FrameType {
     Token,
     PollforMaster,
     ReplyToPollForMaster,
@@ -108,6 +139,12 @@ enum FrameType {
     ReplyPostponed,
     Reserved,
     Proprietary,
+}
+
+impl Default for FrameType {
+    fn default() -> Self {
+        Self::Reserved
+    }
 }
 
 impl From<u8> for FrameType {
@@ -185,13 +222,56 @@ mod tests {
     #[test]
     fn data_crc_test2() {
         const DATA: &[u8] = &[
-            0x55,0xff,0x05,0x0c,0x7f,0x00,0x1f,0x35,0x01,0x0c,0x00,0x01,0x06,0xc0,0xa8,0x01
-                ,0x12,0xba,0xc0,0x02,0x01,0x6a,0x0f,0x0c,0x00,0x80,0x00,0x0a,0x19,0x55,0x3e,0x44
-                ,0x41,0xe8,0x00,0x01,0x3f,0x49,0x09,0xc9,0x6f
+            0x55, 0xff, 0x05, 0x0c, 0x7f, 0x00, 0x1f, 0x35, 0x01, 0x0c, 0x00, 0x01, 0x06, 0xc0,
+            0xa8, 0x01, 0x12, 0xba, 0xc0, 0x02, 0x01, 0x6a, 0x0f, 0x0c, 0x00, 0x80, 0x00, 0x0a,
+            0x19, 0x55, 0x3e, 0x44, 0x41, 0xe8, 0x00, 0x01, 0x3f, 0x49, 0x09, 0xc9, 0x6f,
         ];
         let framelen = DATA.len();
         let data_actual = u16::from_le_bytes(*array_ref!(DATA, framelen - 2, 2));
-        let data_expected = compute_data_crc(&DATA[8..framelen-2]);
+        let data_expected = compute_data_crc(&DATA[8..framelen - 2]);
         assert_eq!(data_actual, data_expected);
+    }
+
+    #[test]
+    fn parse_no_crc() {
+        const DATA: &[u8] = &[
+            0x55, 0xff, 0x05, 0x0c, 0x7f, 0x00, 0x1f, 0x35, 0x01, 0x0c, 0x00, 0x01, 0x06, 0xc0,
+            0xa8, 0x01, 0x12, 0xba, 0xc0, 0x02, 0x01, 0x6a, 0x0f, 0x0c, 0x00, 0x80, 0x00, 0x0a,
+            0x19, 0x55, 0x3e, 0x44, 0x41, 0xe8, 0x00, 0x01, 0x3f, 0x49, 0x09, 0xc9, 0x6f,
+        ];
+        let frame = parse_mstp_skip_crc_checks(DATA).unwrap();
+        assert_eq!(frame.frame_type(), FrameType::BACnetDataExpectingReply);
+        assert_eq!(frame.dst_mac(), 12);
+        assert_eq!(frame.src_mac(), 127);
+        assert_eq!(frame.data_len(), 31);
+        let npdu = frame.npdu().as_ref().unwrap();
+        assert_eq!(npdu.ncpi_control(), 0x0c);
+        assert_eq!(npdu.is_apdu(), true);
+        assert_eq!(npdu.is_dst_spec_present(), false);
+        assert_eq!(npdu.is_src_spec_present(), true);
+        assert_eq!(npdu.is_expecting_reply(), true);
+        assert_eq!(npdu.prio(), NCPIPriority::Normal);
+        let src = npdu.src().as_ref().unwrap();
+        assert_eq!(src.net(), 1);
+        assert_eq!(src.addr().len(), 6);
+        assert_eq!(src.addr()[0], 0xc0);
+        assert_eq!(src.addr()[4], 0xba);
+        assert_eq!(npdu.dst_hopcount().is_none(), true);
+    }
+
+    #[test]
+    fn parse_crc() {
+        const DATA: &[u8] = &[
+            0x55, 0xff, 0x05, 0x0c, 0x7f, 0x00, 0x1f, 0x35, 0x01, 0x0c, 0x00, 0x01, 0x06, 0xc0,
+            0xa8, 0x01, 0x12, 0xba, 0xc0, 0x02, 0x01, 0x6a, 0x0f, 0x0c, 0x00, 0x80, 0x00, 0x0a,
+            0x19, 0x55, 0x3e, 0x44, 0x41, 0xe8, 0x00, 0x01, 0x3f, 0x49, 0x09, 0xc9, 0x6f,
+        ];
+        let frame = parse_mstp(DATA).unwrap();
+        let (actual, expected) = frame.crcs().header();
+        assert_eq!(actual, expected);
+        assert_eq!(actual, 0x35);
+        let (actual, expected) = frame.crcs().data();
+        assert_eq!(actual, expected);
+        assert_eq!(actual, 0x6fc9);
     }
 }
