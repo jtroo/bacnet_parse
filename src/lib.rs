@@ -1,12 +1,12 @@
 //! PLACEHOLDER is a library to parse BACnet bytes into usable Rust structs.
 //!
-//! Currently handles (likely imperfectly):
-//! * BVLL
+//! Currently handles:
+//! * MS/TP
+//! * BVLL (basic - just enough to get NPDU)
 //! * NPDU
 //!
 //! Targeting support for:
 //! * NSDU ([NLM/RPDU](http://www.bacnetwiki.com/wiki/index.php?title=Network_Layer_Message_Type), APDU)
-//! * MS/TP
 //!
 //! To assist parsing BACnet IP or BACnet Ethernet, two recommended libraries are:
 //! * [pnet](https://crates.io/crates/pnet)
