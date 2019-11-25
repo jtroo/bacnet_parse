@@ -2,45 +2,48 @@ use super::nsdu::*;
 use super::Error;
 use arrayref::array_ref;
 
-pub fn parse_npdu(slice: &[u8]) -> Result<NPDU, Error> {
-    if slice.len() < 3 {
-        return Err(Error::Length("npdu len too short"));
+pub fn parse_npdu(bytes: &[u8]) -> Result<NPDU, Error> {
+    if bytes.len() < 3 {
+        return Err(Error::Length("insufficient size for npdu"));
     }
-    if slice[0] != 0x01 {
+    if bytes[0] != 0x01 {
         return Err(Error::InvalidValue("unhandled npdu version"));
     }
 
     let mut npdu = NPDU::default();
-    npdu.ncpi_control = slice[1];
+    npdu.ncpi_control = bytes[1];
 
     let _nsdu_start = if npdu.is_dst_spec_present() {
-        let slice_after_dst = if let Ok((s, dst)) = NetAddr::parse(&slice[2..]) {
+        let bytes_after_dst = if let Ok((s, dst)) = NetAddr::parse(&bytes[2..]) {
             npdu.dst = Some(DstHopCount { dst, hopcount: 0 });
             s
         } else {
-            slice
+            bytes
         };
 
-        let hopcount_slice = if npdu.is_src_spec_present() {
-            let (slice_after_src, src) = NetAddr::parse(slice_after_dst)?;
+        let hopcount_bytes = if npdu.is_src_spec_present() {
+            let (bytes_after_src, src) = NetAddr::parse(bytes_after_dst)?;
             npdu.src = Some(src);
-            slice_after_src
+            bytes_after_src
         } else {
-            slice_after_dst
+            bytes_after_dst
         };
 
+        if hopcount_bytes.len() < 2 {
+            return Err(Error::Length("insufficient size for hopcount and payload"))
+        }
         if let Some(dst_hopcount) = &mut npdu.dst {
-            dst_hopcount.hopcount = hopcount_slice[0];
-            &hopcount_slice[1..]
+            dst_hopcount.hopcount = hopcount_bytes[0];
+            &hopcount_bytes[1..]
         } else {
-            hopcount_slice
+            hopcount_bytes
         }
     } else if npdu.is_src_spec_present() {
-        let (slice_after_src, src_addr) = NetAddr::parse(&slice[2..])?;
+        let (bytes_after_src, src_addr) = NetAddr::parse(&bytes[2..])?;
         npdu.src = Some(src_addr);
-        slice_after_src
+        bytes_after_src
     } else {
-        &slice[2..]
+        &bytes[2..]
     };
 
     // TODO: parse nsdu
@@ -132,16 +135,16 @@ pub struct NetAddr<'a> {
 impl<'a> NetAddr<'a> {
     fn parse(b: &'a [u8]) -> Result<(&'a [u8], Self), Error> {
         if b.len() < 4 {
-            return Err(Error::Length("dsthopcount len err"));
+            return Err(Error::Length("insufficient size for netaddr"));
         }
         let net = u16::from_be_bytes(*array_ref!(b, 0, 2));
         let addrlen = b[2];
-        let rest_of_slice_offset = 3 + addrlen as usize;
-        if b.len() < rest_of_slice_offset {
-            return Err(Error::Length("dsthopcount len err 2"));
+        let rest_of_bytes_offset = 3 + addrlen as usize;
+        if b.len() < rest_of_bytes_offset {
+            return Err(Error::Length("insufficient size for netaddr address"));
         }
         let addr = &b[3..3 + addrlen as usize];
-        Ok((&b[rest_of_slice_offset..], Self { net, addr }))
+        Ok((&b[rest_of_bytes_offset..], Self { net, addr }))
     }
 
     pub fn net(&self) -> u16 {
@@ -150,5 +153,19 @@ impl<'a> NetAddr<'a> {
 
     pub fn addr(&self) -> &'a [u8] {
         self.addr
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn netaddr_test() {
+        const BYTES: &[u8] = &[0x12, 0x34, 0x4, 192, 168, 1, 10];
+        let (rest, netaddr) = NetAddr::parse(BYTES).unwrap();
+        assert_eq!(rest.len(), 0);
+        assert_eq!(netaddr.net(), 0x1234);
+        assert_eq!(netaddr.addr(), &[192, 168, 1, 10]);
     }
 }

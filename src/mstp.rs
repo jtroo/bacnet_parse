@@ -4,11 +4,13 @@ use arrayref::array_ref;
 use core::convert::From;
 
 pub fn parse_mstp_skip_crc_compute(bytes: &[u8]) -> Result<MstpFrameNoCrcs, Error> {
-    if bytes.len() < 8 {
-        return Err(Error::Length("mstp len err"));
-    }
     if bytes[0] != 0x55 || bytes[1] != 0xFF {
-        return Err(Error::InvalidValue("mstp preamble err"));
+        return Err(Error::InvalidValue("not the mstp preamble"));
+    }
+    if bytes.len() < 8 {
+        return Err(Error::Length(
+            "data is shorter than minimum mstp frame size",
+        ));
     }
     let mut frame = MstpFrameNoCrcs::default();
     frame.frame_type = bytes[2].into();
