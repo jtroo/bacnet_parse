@@ -1,5 +1,18 @@
+use crate::Error;
+
+pub fn parse_rpdu(bytes: &[u8]) -> Result<RPDU, Error> {
+    // TODO
+    Ok(RPDU { bytes })
+}
+
 pub struct RPDU<'a> {
-    _bytes: &'a [u8],
+    bytes: &'a [u8],
+}
+
+impl<'a> RPDU<'a> {
+    pub fn bytes(&self) -> &'a [u8] {
+        self.bytes
+    }
 }
 
 pub enum NLMType {

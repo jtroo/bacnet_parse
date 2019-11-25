@@ -35,6 +35,7 @@ mod npdu;
 pub use npdu::*;
 
 mod nsdu;
+pub use nsdu::*;
 
 #[derive(Debug)]
 pub enum Error {
