@@ -1,9 +1,12 @@
 [package]
 name = "bacnet_parse"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Jan Tache <j.andreitabs@gmail.com>"]
+homepage = "https://github.com/jtroo/bacnet_parse"
 repository = "https://github.com/jtroo/bacnet_parse"
-description = "no-std BACnet parser"
+description = "no_std BACnet parser"
+categories = ["parsing"]
+documentation = "https://docs.rs/bacnet_parse"
 license = "MPL-2.0"
 edition = "2018"
 
@@ -11,3 +14,6 @@ edition = "2018"
 
 [dependencies]
 arrayref = "0.3.5"
+
+[package.metadata.docs.rs]
+all-features = true
