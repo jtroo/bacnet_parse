@@ -3,7 +3,7 @@ use super::*;
 use arrayref::array_ref;
 use core::convert::From;
 
-pub fn parse_mstp_skip_crc_compute(bytes: &[u8]) -> Result<MstpFrameNoCrcs, Error> {
+pub fn parse_mstp_skip_crc_compute(bytes: &[u8]) -> Result<MSTPFrameNoCrcs, Error> {
     if bytes[0] != 0x55 || bytes[1] != 0xFF {
         return Err(Error::InvalidValue("not the mstp preamble"));
     }
@@ -12,7 +12,7 @@ pub fn parse_mstp_skip_crc_compute(bytes: &[u8]) -> Result<MstpFrameNoCrcs, Erro
             "data is shorter than minimum mstp frame size",
         ));
     }
-    let mut frame = MstpFrameNoCrcs::default();
+    let mut frame = MSTPFrameNoCrcs::default();
     frame.frame_type = bytes[2].into();
     frame.dst_mac = bytes[3];
     frame.src_mac = bytes[4];
@@ -31,7 +31,7 @@ pub fn parse_mstp_skip_crc_compute(bytes: &[u8]) -> Result<MstpFrameNoCrcs, Erro
     Ok(frame)
 }
 
-pub fn parse_mstp(bytes: &[u8]) -> Result<MstpFrame, Error> {
+pub fn parse_mstp(bytes: &[u8]) -> Result<MSTPFrame, Error> {
     let frame = parse_mstp_skip_crc_compute(bytes)?;
     let framelen = bytes.len();
 
@@ -43,7 +43,7 @@ pub fn parse_mstp(bytes: &[u8]) -> Result<MstpFrame, Error> {
         crcs.data_expected = compute_data_crc(&bytes[8..framelen - 2]);
     }
 
-    Ok(MstpFrame {
+    Ok(MSTPFrame {
         frame_type: frame.frame_type,
         dst_mac: frame.dst_mac,
         src_mac: frame.src_mac,
@@ -54,16 +54,16 @@ pub fn parse_mstp(bytes: &[u8]) -> Result<MstpFrame, Error> {
 }
 
 #[derive(Default)]
-pub struct MstpFrameNoCrcs<'a> {
-    frame_type: FrameType,
+pub struct MSTPFrameNoCrcs<'a> {
+    frame_type: MSTPFrameType,
     dst_mac: u8,
     src_mac: u8,
     len: u16,
     npdu: Option<NPDU<'a>>,
 }
 
-pub struct MstpFrame<'a> {
-    frame_type: FrameType,
+pub struct MSTPFrame<'a> {
+    frame_type: MSTPFrameType,
     dst_mac: u8,
     src_mac: u8,
     len: u16,
@@ -71,8 +71,8 @@ pub struct MstpFrame<'a> {
     npdu: Option<NPDU<'a>>,
 }
 
-impl<'a> MstpFrameNoCrcs<'a> {
-    pub fn frame_type(&self) -> FrameType {
+impl<'a> MSTPFrameNoCrcs<'a> {
+    pub fn frame_type(&self) -> MSTPFrameType {
         self.frame_type
     }
     pub fn dst_mac(&self) -> u8 {
@@ -89,8 +89,8 @@ impl<'a> MstpFrameNoCrcs<'a> {
     }
 }
 
-impl<'a> MstpFrame<'a> {
-    pub fn frame_type(&self) -> FrameType {
+impl<'a> MSTPFrame<'a> {
+    pub fn frame_type(&self) -> MSTPFrameType {
         self.frame_type
     }
     pub fn dst_mac(&self) -> u8 {
@@ -130,7 +130,7 @@ impl CRCs {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum FrameType {
+pub enum MSTPFrameType {
     Token,
     PollforMaster,
     ReplyToPollForMaster,
@@ -143,13 +143,13 @@ pub enum FrameType {
     Proprietary,
 }
 
-impl Default for FrameType {
+impl Default for MSTPFrameType {
     fn default() -> Self {
         Self::Reserved
     }
 }
 
-impl From<u8> for FrameType {
+impl From<u8> for MSTPFrameType {
     fn from(b: u8) -> Self {
         match b {
             0 => Self::Token,
@@ -242,7 +242,7 @@ mod tests {
             0x19, 0x55, 0x3e, 0x44, 0x41, 0xe8, 0x00, 0x01, 0x3f, 0x49, 0x09, 0xc9, 0x6f,
         ];
         let frame = parse_mstp_skip_crc_compute(DATA).unwrap();
-        assert_eq!(frame.frame_type(), FrameType::BACnetDataExpectingReply);
+        assert_eq!(frame.frame_type(), MSTPFrameType::BACnetDataExpectingReply);
         assert_eq!(frame.dst_mac(), 12);
         assert_eq!(frame.src_mac(), 127);
         assert_eq!(frame.data_len(), 31);
