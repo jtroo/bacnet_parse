@@ -1,5 +1,8 @@
 # bacnet_parse
 
+[![LICENSE](https://img.shields.io/badge/license-MPL_2.0-blue.svg)](LICENSE)
+[![Crates.io Version](https://img.shields.io/crates/v/bacnet_parse.svg)](https://crates.io/crates/bacnet_parse)
+
 bacnet_parse is a #![no_std] library to parse BACnet bytes into read-only data structures
 
 Currently handles:
