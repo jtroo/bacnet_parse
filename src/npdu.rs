@@ -1,4 +1,3 @@
-use super::nsdu::*;
 use super::Error;
 use arrayref::array_ref;
 
@@ -13,7 +12,7 @@ pub fn parse_npdu(bytes: &[u8]) -> Result<NPDU, Error> {
     let mut npdu = NPDU::default();
     npdu.ncpi_control = bytes[1];
 
-    let _nsdu_start = if npdu.is_dst_spec_present() {
+    npdu.payload = if npdu.is_dst_spec_present() {
         let bytes_after_dst = if let Ok((s, dst)) = NetAddr::parse(&bytes[2..]) {
             npdu.dst = Some(DstHopCount { dst, hopcount: 0 });
             s
@@ -45,8 +44,6 @@ pub fn parse_npdu(bytes: &[u8]) -> Result<NPDU, Error> {
     } else {
         &bytes[2..]
     };
-
-    // TODO: parse nsdu
     Ok(npdu)
 }
 
@@ -55,7 +52,7 @@ pub struct NPDU<'a> {
     ncpi_control: u8,
     dst: Option<DstHopCount<'a>>,
     src: Option<NetAddr<'a>>,
-    nsdu: NSDU<'a>,
+    payload: &'a [u8],
 }
 
 impl<'a> NPDU<'a> {
@@ -97,8 +94,8 @@ impl<'a> NPDU<'a> {
         self.ncpi_control
     }
 
-    pub fn nsdu(&self) -> &NSDU<'a> {
-        &self.nsdu
+    pub fn payload(&self) -> &'a  [u8]{
+        self.payload
     }
 }
 

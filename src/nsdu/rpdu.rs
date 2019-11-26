@@ -1,8 +1,34 @@
-pub struct RPDU<'a> {
-    _bytes: &'a [u8],
+use crate::Error;
+
+pub fn parse_rpdu(bytes: &[u8]) -> Result<RPDU, Error> {
+    if bytes.is_empty() {
+        return Err(Error::Length("no rpdu data"));
+    }
+    Ok(match bytes[0] {
+        0x00 => RPDU::WhoIsRouterToNetwork,
+        0x01 => RPDU::IAmRouterToNetwork,
+        0x02 => RPDU::ICouldBeRouterToNetwork,
+        0x03 => RPDU::RejectMessageToNetwork,
+        0x04 => RPDU::RouterBusyToNetwork,
+        0x05 => RPDU::RouterAvailableToNetwork,
+        0x06 => RPDU::InitializeRoutingTable,
+        0x07 => RPDU::InitializeRoutingTableACK,
+        0x08 => RPDU::EstablishConnectionToNetwork,
+        0x09 => RPDU::DisconnectConnectionToNetwork,
+        0x0A => RPDU::ChallengeRequest,
+        0x0B => RPDU::SecurityPayload,
+        0x0C => RPDU::SecurityResponse,
+        0x0D => RPDU::RequestKeyUpdate,
+        0x0E => RPDU::UpdateKeySet,
+        0x0F => RPDU::UpdateDistributionKey,
+        0x10 => RPDU::RequestMasterKey,
+        0x11 => RPDU::SetMasterKey,
+        0x12..=0x7F => RPDU::Reserved,
+        0x80..=0xFF => RPDU::Proprietary,
+    })
 }
 
-pub enum NLMType {
+pub enum RPDU {
     WhoIsRouterToNetwork,
     IAmRouterToNetwork,
     ICouldBeRouterToNetwork,
@@ -23,31 +49,4 @@ pub enum NLMType {
     SetMasterKey,
     Reserved,
     Proprietary,
-}
-
-impl From<u8> for NLMType {
-    fn from(b: u8) -> Self {
-        match b {
-            0x00 => Self::WhoIsRouterToNetwork,
-            0x01 => Self::IAmRouterToNetwork,
-            0x02 => Self::ICouldBeRouterToNetwork,
-            0x03 => Self::RejectMessageToNetwork,
-            0x04 => Self::RouterBusyToNetwork,
-            0x05 => Self::RouterAvailableToNetwork,
-            0x06 => Self::InitializeRoutingTable,
-            0x07 => Self::InitializeRoutingTableACK,
-            0x08 => Self::EstablishConnectionToNetwork,
-            0x09 => Self::DisconnectConnectionToNetwork,
-            0x0A => Self::ChallengeRequest,
-            0x0B => Self::SecurityPayload,
-            0x0C => Self::SecurityResponse,
-            0x0D => Self::RequestKeyUpdate,
-            0x0E => Self::UpdateKeySet,
-            0x0F => Self::UpdateDistributionKey,
-            0x10 => Self::RequestMasterKey,
-            0x11 => Self::SetMasterKey,
-            0x12..=0x7F => Self::Reserved,
-            0x80..=0xFF => Self::Proprietary,
-        }
-    }
 }
