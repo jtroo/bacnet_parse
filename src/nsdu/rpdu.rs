@@ -1,13 +1,25 @@
 use crate::Error;
+use arrayref::array_ref;
+
+pub type DNET = u16;
+
+fn try_parse_dnet(b: &[u8]) -> Result<DNET, Error> {
+    if b.len() < 2  {
+        Err(Error::Length("insufficient size for DNET"))
+    } else {
+        Ok(u16::from_be_bytes(*array_ref!(b, 0, 2)))
+    }
+}
 
 pub fn parse_rpdu(bytes: &[u8]) -> Result<RPDU, Error> {
     if bytes.is_empty() {
         return Err(Error::Length("no rpdu data"));
     }
+    // TODO: figure out if this is a single u16 or needs to be an iterator
     Ok(match bytes[0] {
-        0x00 => RPDU::WhoIsRouterToNetwork,
-        0x01 => RPDU::IAmRouterToNetwork,
-        0x02 => RPDU::ICouldBeRouterToNetwork,
+        0x00 => RPDU::WhoIsRouterToNetwork(try_parse_dnet(bytes)?),
+        0x01 => RPDU::IAmRouterToNetwork(try_parse_dnet(bytes)?),
+        0x02 => RPDU::ICouldBeRouterToNetwork(try_parse_dnet(bytes)?),
         0x03 => RPDU::RejectMessageToNetwork,
         0x04 => RPDU::RouterBusyToNetwork,
         0x05 => RPDU::RouterAvailableToNetwork,
@@ -29,9 +41,9 @@ pub fn parse_rpdu(bytes: &[u8]) -> Result<RPDU, Error> {
 }
 
 pub enum RPDU {
-    WhoIsRouterToNetwork,
-    IAmRouterToNetwork,
-    ICouldBeRouterToNetwork,
+    WhoIsRouterToNetwork(DNET),
+    IAmRouterToNetwork(DNET),
+    ICouldBeRouterToNetwork(DNET),
     RejectMessageToNetwork,
     RouterBusyToNetwork,
     RouterAvailableToNetwork,

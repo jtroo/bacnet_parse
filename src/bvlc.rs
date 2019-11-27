@@ -11,8 +11,9 @@ pub fn parse_bvlc(slice: &[u8]) -> Result<BVLC, Error> {
     }
 
     let len = u16::from_be_bytes(*array_ref!(slice, 2, 2));
-    if len as usize != slice.len() {
-        return Err(Error::Length("inconsistent bvlc length"));
+    let len = len as usize;
+    if len > slice.len() {
+        return Err(Error::Length("bvlc length too largu"));
     }
 
     let mut bvlc = BVLC::default();
@@ -27,10 +28,10 @@ pub fn parse_bvlc(slice: &[u8]) -> Result<BVLC, Error> {
         4
     };
     if bvlc.has_npdu() {
-        if slice.len() < npdu_start_idx {
+        if slice.len() < npdu_start_idx || len < npdu_start_idx {
             return Err(Error::Length("insufficient size for npdu"));
         }
-        if let Ok(npdu) = parse_npdu(&slice[npdu_start_idx..]) {
+        if let Ok(npdu) = parse_npdu(&slice[npdu_start_idx..len]) {
             bvlc.npdu = Some(npdu);
         }
     }
