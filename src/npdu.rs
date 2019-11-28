@@ -56,6 +56,7 @@ pub struct NPDU<'a> {
 }
 
 impl<'a> NPDU<'a> {
+    /// `true` if the payload is APDU, `false` if payload is NLM/RPDU
     pub fn is_apdu(&self) -> bool {
         self.ncpi_control & 0x80 == 0
     }

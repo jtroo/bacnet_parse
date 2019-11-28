@@ -55,6 +55,20 @@ impl<'a> BVLC<'a> {
     pub fn npdu(&self) -> &Option<NPDU<'a>> {
         &self.npdu
     }
+    pub fn has_npdu(&self) -> bool {
+        match &self.bfn {
+            BVLCFunction::ForwardedNPDU
+            | BVLCFunction::UnicastNPDU
+            | BVLCFunction::BroadcastNPDU => true,
+            _ => false,
+        }
+    }
+    pub fn has_ip_port(&self) -> bool {
+        match &self.bfn {
+            BVLCFunction::ForwardedNPDU => true,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -90,24 +104,6 @@ impl From<u8> for BVLCFunction {
             0x0b => Self::BroadcastNPDU,
             0x0c => Self::SecureBVLL,
             _ => Self::Unknown,
-        }
-    }
-}
-
-impl BVLC<'_> {
-    pub fn has_npdu(&self) -> bool {
-        match &self.bfn {
-            BVLCFunction::ForwardedNPDU
-            | BVLCFunction::UnicastNPDU
-            | BVLCFunction::BroadcastNPDU => true,
-            _ => false,
-        }
-    }
-
-    pub fn has_ip_port(&self) -> bool {
-        match &self.bfn {
-            BVLCFunction::ForwardedNPDU => true,
-            _ => false,
         }
     }
 }
