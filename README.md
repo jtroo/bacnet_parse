@@ -17,6 +17,18 @@ To assist parsing BACnet IP or BACnet Ethernet, two recommended libraries are:
 * [pnet](https://crates.io/crates/pnet)
 * [etherparse](https://crates.io/crates/etherparse)
 
+### How to use this library
+
+For BACnet ethernet and BACnet IP, first identify your BACnet application layer bytes then call
+to `parse_bvlc(bytes)` and go from there.
+
+For MSTP, call either `parse_mstp(bytes)` or `parse_mstp_skip_crc_compute(bytes)`.
+
+Not yet implemented below:
+
+In order to parse the RPDU or APDU, first check which one you have with `npdu.is_apdu()` then
+call either `parse_apdu(npdu.payload())` or `parse_rpdu(npdu.payload())`.
+
 ### Examples
 
 BVLC example
