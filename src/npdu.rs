@@ -29,7 +29,7 @@ pub fn parse_npdu(bytes: &[u8]) -> Result<NPDU, Error> {
         };
 
         if hopcount_bytes.len() < 2 {
-            return Err(Error::Length("insufficient size for hopcount and payload"))
+            return Err(Error::Length("insufficient size for hopcount and payload"));
         }
         if let Some(dst_hopcount) = &mut npdu.dst {
             dst_hopcount.hopcount = hopcount_bytes[0];
@@ -94,7 +94,7 @@ impl<'a> NPDU<'a> {
         self.ncpi_control
     }
 
-    pub fn payload(&self) -> &'a  [u8]{
+    pub fn payload(&self) -> &'a [u8] {
         self.payload
     }
 }

@@ -4,7 +4,7 @@ use arrayref::array_ref;
 pub type DNET = u16;
 
 fn try_parse_dnet(b: &[u8]) -> Result<DNET, Error> {
-    if b.len() < 2  {
+    if b.len() < 2 {
         Err(Error::Length("insufficient size for DNET"))
     } else {
         Ok(u16::from_be_bytes(*array_ref!(b, 0, 2)))
