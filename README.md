@@ -17,7 +17,7 @@ To assist parsing BACnet IP or BACnet Ethernet, two recommended libraries are:
 * [pnet](https://crates.io/crates/pnet)
 * [etherparse](https://crates.io/crates/etherparse)
 
-### Example
+### Examples
 
 BVLC example
 
@@ -33,10 +33,7 @@ let bvlc = parse_bvlc(&bytes)?;
 
 assert_eq!(bvlc.bvlc_function(), BVLCFunction::UnicastNPDU);
 
-let npdu = match bvlc.npdu() {
-    Some(n) => n,
-    None => panic!("npdu should be Some")
-};
+let npdu = bvlc.npdu().as_ref().expect("npdu");
 
 assert_eq!(npdu.ncpi_control(), 0x20);
 assert_eq!(npdu.is_apdu(), true);
@@ -45,10 +42,7 @@ assert_eq!(npdu.is_dst_spec_present(), true);
 assert_eq!(npdu.is_expecting_reply(), false);
 assert_eq!(npdu.src().is_none(), true);
 
-let dst_hopcount = match npdu.dst_hopcount() {
-    Some(dh) => dh,
-    None => panic!("dst_hopcount should be Some")
-};
+let dst_hopcount = npdu.dst_hopcount().as_ref().expect("dst_hopcount");
 
 assert_eq!(dst_hopcount.hopcount(), 255);
 
@@ -76,6 +70,16 @@ assert_eq!(actual, 0x35);
 let (actual, expected) = frame.crcs().data();
 assert_eq!(actual, expected);
 assert_eq!(actual, 0x6fc9);
+
+assert_eq!(frame.frame_type(), MSTPFrameType::BACnetDataExpectingReply);
+let npdu = frame.npdu().as_ref().expect("npdu");
+
+let src = npdu.src().as_ref().expect("src");
+assert_eq!(src.net(), 1);
+assert_eq!(src.addr().len(), 6);
+let addr_cmp: &[u8] = &[0xc0, 0xa8, 0x01, 0x12, 0xba, 0xc0];
+assert_eq!(src.addr(), addr_cmp);
+assert_eq!(npdu.dst_hopcount().is_none(), true);
 
 let bytes: &[u8] = &[
     0x55, 0xff, 0x05, 0x0c, 0x7f, 0x00, 0x1f, 0x34, 0x01, 0x0c, 0x00, 0x01, 0x06, 0xc0,
