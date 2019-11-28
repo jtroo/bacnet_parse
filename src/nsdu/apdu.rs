@@ -1,48 +1,35 @@
 use crate::Error;
+use arrayref::array_ref;
 
 pub fn parse_apdu(bytes: &[u8]) -> Result<APDU, Error> {
-    // TODO
-    Ok(APDU { bytes })
-}
-
-pub struct APDU<'a> {
-    bytes: &'a [u8],
-}
-
-impl<'a> APDU<'a> {
-    pub fn bytes(&self) -> &'a [u8] {
-        self.bytes
+    if bytes.is_empty() {
+        return Err(Error::Length("empty apdu bytes"));
     }
+    Ok(match bytes[0] & 0xF0 {
+        0x00 => APDU::BACnetConfirmedRequestPDU,
+        0x10 => APDU::BACnetUnconfirmedRequestPDU(UnconfirmedServiceChoice::parse(&bytes[1..])?),
+        0x20 => APDU::BACnetSimpleACKPDU,
+        0x30 => APDU::BACnetComplexACKPDU,
+        0x40 => APDU::Segment,
+        0x50 => APDU::Error(ErrorPDU::parse(&bytes[1..])?),
+        0x60 => APDU::RejectPDU,
+        0x70 => APDU::Abort,
+        0x80..=0xF0 => APDU::Reserved,
+        _ => unsafe { core::hint::unreachable_unchecked() },
+    })
 }
 
 /// Classification of APDU service. There are multiple services within each PDU type.
-pub enum PDUType {
+pub enum APDU {
     BACnetConfirmedRequestPDU,
-    BACnetUnconfirmedRequestPDU,
+    BACnetUnconfirmedRequestPDU(UnconfirmedServiceChoice),
     BACnetSimpleACKPDU,
     BACnetComplexACKPDU,
     Segment,
-    Error,
+    Error(ErrorPDU),
     RejectPDU,
     Abort,
     Reserved,
-}
-
-impl From<u8> for PDUType {
-    fn from(b: u8) -> Self {
-        match b & 0xF0 {
-            0x00 => Self::BACnetConfirmedRequestPDU,
-            0x10 => Self::BACnetUnconfirmedRequestPDU,
-            0x20 => Self::BACnetSimpleACKPDU,
-            0x30 => Self::BACnetComplexACKPDU,
-            0x40 => Self::Segment,
-            0x50 => Self::Error,
-            0x60 => Self::RejectPDU,
-            0x70 => Self::Abort,
-            0x80..=0xF0 => Self::Reserved,
-            _ => unsafe { core::hint::unreachable_unchecked() },
-        }
-    }
 }
 
 pub enum ConfirmedServiceChoice {
@@ -79,15 +66,18 @@ pub enum UnconfirmedServiceChoice {
     Unknown,
 }
 
-impl From<u8> for UnconfirmedServiceChoice {
-    fn from(b: u8) -> Self {
-        match b {
+impl UnconfirmedServiceChoice {
+    fn parse(b: &[u8]) -> Result<Self, Error> {
+        if b.is_empty() {
+            return Err(Error::Length("wrong len for UnconfirmedServiceChoice"));
+        }
+        Ok(match b[1] {
             0x00 => Self::IAm,
             0x01 => Self::IHave,
             0x07 => Self::WhoHas,
             0x08 => Self::WhoIs,
             _ => Self::Unknown,
-        }
+        })
     }
 }
 
@@ -120,5 +110,33 @@ impl From<u8> for BACnetRejectReason {
             9 => Self::UnrecognizedService,
             _ => Self::Unknown,
         }
+    }
+}
+
+pub struct ErrorPDU {
+    invoke_id: u8,
+    error_class: u8,
+    error_code: u8,
+}
+
+impl ErrorPDU {
+    fn parse(b: &[u8]) -> Result<Self, Error> {
+        if b.len() != 3 {
+            return Err(Error::Length("wrong len for ErrorPDU"));
+        }
+        Ok(Self {
+            invoke_id: b[0],
+            error_class: b[1],
+            error_code: b[2],
+        })
+    }
+    pub fn invoke_id(&self) -> u8 {
+        self.invoke_id
+    }
+    pub fn error_class(&self) -> u8 {
+        self.error_class
+    }
+    pub fn error_code(&self) -> u8 {
+        self.error_code
     }
 }
