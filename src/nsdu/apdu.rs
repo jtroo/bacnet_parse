@@ -1,5 +1,4 @@
 use crate::Error;
-use arrayref::array_ref;
 
 pub fn parse_apdu(bytes: &[u8]) -> Result<APDU, Error> {
     if bytes.is_empty() {
