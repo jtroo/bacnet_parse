@@ -33,6 +33,7 @@
 //!
 //! ```
 //! # use bacnet_parse::*;
+//! # use bacnet_parse::bvlc::*;
 //! # fn main() -> Result <(), Error> {
 //! let bytes: &[u8] = &[
 //!     0x81, 0x0a, 0x00, 0x1b, // BVLC
@@ -70,6 +71,7 @@
 //! MSTP example
 //! ```
 //! # use bacnet_parse::*;
+//! # use bacnet_parse::mstp::*;
 //! # fn main() -> Result <(), Error> {
 //! let bytes: &[u8] = &[
 //!     0x55, 0xff, 0x05, 0x0c, 0x7f, 0x00, 0x1f, 0x35, 0x01, 0x0c, 0x00, 0x01, 0x06, 0xc0,
