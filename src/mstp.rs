@@ -37,10 +37,10 @@ pub fn parse_mstp(bytes: &[u8]) -> Result<MSTPFrame, Error> {
 
     let mut crcs = CRCs::default();
     crcs.header_actual = bytes[7];
-    crcs.header_expected = compute_header_crc(*array_ref!(bytes, 2, 5));
+    crcs.header_computed = compute_header_crc(*array_ref!(bytes, 2, 5));
     if framelen > 10 {
         crcs.data_actual = u16::from_le_bytes(*array_ref!(bytes, framelen - 2, 2));
-        crcs.data_expected = compute_data_crc(&bytes[8..framelen - 2]);
+        crcs.data_computed = compute_data_crc(&bytes[8..framelen - 2]);
     }
 
     Ok(MSTPFrame {
@@ -112,20 +112,20 @@ impl<'a> MSTPFrame<'a> {
 
 #[derive(Clone, Copy, Default)]
 pub struct CRCs {
-    header_expected: u8,
+    header_computed: u8,
     header_actual: u8,
-    data_expected: u16,
+    data_computed: u16,
     data_actual: u16,
 }
 
 impl CRCs {
     /// Returns the header CRCs: (actual value, re-computed).
     pub fn header(self) -> (u8, u8) {
-        (self.header_actual, self.header_expected)
+        (self.header_actual, self.header_computed)
     }
     /// Returns the data CRCs: (actual value, re-computed).
     pub fn data(self) -> (u16, u16) {
-        (self.data_actual, self.data_expected)
+        (self.data_actual, self.data_computed)
     }
 }
 
@@ -230,8 +230,8 @@ mod tests {
         ];
         let framelen = DATA.len();
         let data_actual = u16::from_le_bytes(*array_ref!(DATA, framelen - 2, 2));
-        let data_expected = compute_data_crc(&DATA[8..framelen - 2]);
-        assert_eq!(data_actual, data_expected);
+        let data_computed = compute_data_crc(&DATA[8..framelen - 2]);
+        assert_eq!(data_actual, data_computed);
     }
 
     #[test]
@@ -269,11 +269,11 @@ mod tests {
             0x19, 0x55, 0x3e, 0x44, 0x41, 0xe8, 0x00, 0x01, 0x3f, 0x49, 0x09, 0xc9, 0x6f,
         ];
         let frame = parse_mstp(DATA).unwrap();
-        let (actual, expected) = frame.crcs().header();
-        assert_eq!(actual, expected);
+        let (actual, computed) = frame.crcs().header();
+        assert_eq!(actual, computed);
         assert_eq!(actual, 0x35);
-        let (actual, expected) = frame.crcs().data();
-        assert_eq!(actual, expected);
+        let (actual, computed) = frame.crcs().data();
+        assert_eq!(actual, computed);
         assert_eq!(actual, 0x6fc9);
     }
 
@@ -285,11 +285,11 @@ mod tests {
             0x19, 0x55, 0x3e, 0x44, 0x41, 0xe8, 0x00, 0x01, 0x3f, 0x49, 0x09, 0xc9, 0x6e,
         ];
         let frame = parse_mstp(DATA).unwrap();
-        let (actual, expected) = frame.crcs().header();
-        assert_ne!(actual, expected);
+        let (actual, computed) = frame.crcs().header();
+        assert_ne!(actual, computed);
         assert_eq!(actual, 0x34);
-        let (actual, expected) = frame.crcs().data();
-        assert_ne!(actual, expected);
+        let (actual, computed) = frame.crcs().data();
+        assert_ne!(actual, computed);
         assert_eq!(actual, 0x6ec9);
     }
 }
