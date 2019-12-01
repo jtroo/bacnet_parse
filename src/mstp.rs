@@ -131,37 +131,37 @@ impl CRCs {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum MSTPFrameType {
-    Token,
-    PollforMaster,
-    ReplyToPollForMaster,
-    TestRequest,
-    TestResponse,
-    BACnetDataExpectingReply,
-    BACnetDataNotExpectingReply,
-    ReplyPostponed,
-    Reserved,
-    Proprietary,
+    Token(u8),
+    PollforMaster(u8),
+    ReplyToPollForMaster(u8),
+    TestRequest(u8),
+    TestResponse(u8),
+    BACnetDataExpectingReply(u8),
+    BACnetDataNotExpectingReply(u8),
+    ReplyPostponed(u8),
+    Reserved(u8),
+    Proprietary(u8),
 }
 
 impl Default for MSTPFrameType {
     fn default() -> Self {
-        Self::Reserved
+        Self::Reserved(127)
     }
 }
 
 impl From<u8> for MSTPFrameType {
     fn from(b: u8) -> Self {
         match b {
-            0 => Self::Token,
-            1 => Self::PollforMaster,
-            2 => Self::ReplyToPollForMaster,
-            3 => Self::TestRequest,
-            4 => Self::TestResponse,
-            5 => Self::BACnetDataExpectingReply,
-            6 => Self::BACnetDataNotExpectingReply,
-            7 => Self::ReplyPostponed,
-            8..=127 => Self::Reserved,
-            128..=255 => Self::Proprietary,
+            0 => Self::Token(b),
+            1 => Self::PollforMaster(b),
+            2 => Self::ReplyToPollForMaster(b),
+            3 => Self::TestRequest(b),
+            4 => Self::TestResponse(b),
+            5 => Self::BACnetDataExpectingReply(b),
+            6 => Self::BACnetDataNotExpectingReply(b),
+            7 => Self::ReplyPostponed(b),
+            8..=127 => Self::Reserved(b),
+            128..=255 => Self::Proprietary(b),
         }
     }
 }
