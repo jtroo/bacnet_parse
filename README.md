@@ -83,7 +83,7 @@ let (actual, expected) = frame.crcs().data();
 assert_eq!(actual, expected);
 assert_eq!(actual, 0x6fc9);
 
-assert_eq!(frame.frame_type(), MSTPFrameType::BACnetDataExpectingReply);
+assert_eq!(frame.frame_type(), MSTPFrameType::BACnetDataExpectingReply(5));
 let npdu = frame.npdu().as_ref().expect("npdu");
 
 let src = npdu.src().as_ref().expect("src");

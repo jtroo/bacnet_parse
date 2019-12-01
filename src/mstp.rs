@@ -242,7 +242,7 @@ mod tests {
             0x19, 0x55, 0x3e, 0x44, 0x41, 0xe8, 0x00, 0x01, 0x3f, 0x49, 0x09, 0xc9, 0x6f,
         ];
         let frame = parse_mstp_skip_crc_compute(DATA).unwrap();
-        assert_eq!(frame.frame_type(), MSTPFrameType::BACnetDataExpectingReply);
+        assert_eq!(frame.frame_type(), MSTPFrameType::BACnetDataExpectingReply(5));
         assert_eq!(frame.dst_mac(), 12);
         assert_eq!(frame.src_mac(), 127);
         assert_eq!(frame.data_len(), 31);
