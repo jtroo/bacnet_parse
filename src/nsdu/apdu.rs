@@ -4,31 +4,54 @@ pub fn parse_apdu(bytes: &[u8]) -> Result<APDU, Error> {
     if bytes.is_empty() {
         return Err(Error::Length("empty apdu bytes"));
     }
-    Ok(match bytes[0] & 0xF0 {
-        0x00 => APDU::BACnetConfirmedRequestPDU,
-        0x10 => APDU::BACnetUnconfirmedRequestPDU(UnconfirmedServiceChoice::parse(&bytes[1..])?),
-        0x20 => APDU::BACnetSimpleACKPDU,
-        0x30 => APDU::BACnetComplexACKPDU,
-        0x40 => APDU::Segment,
-        0x50 => APDU::Error(ErrorPDU::parse(&bytes[1..])?),
-        0x60 => APDU::RejectPDU,
-        0x70 => APDU::Abort,
-        0x80..=0xF0 => APDU::Reserved,
-        _ => unsafe { core::hint::unreachable_unchecked() },
-    })
+    Ok(APDU{bytes, pdu_type: bytes[0]})
+}
+
+pub struct APDU<'a> {
+    bytes: &'a [u8],
+    pdu_type: u8,
+}
+
+impl <'a>APDU<'a> {
+    pub fn pdu_type(&self) -> PDUType {
+        self.pdu_type.into()
+    }
+    pub fn pdu_type_byte(&self) -> u8 {
+        self.pdu_type
+    }
+    pub fn bytes(&self) -> &'a[u8] {
+        self.bytes
+    }
 }
 
 /// Classification of APDU service. There are multiple services within each PDU type.
-pub enum APDU {
+pub enum PDUType {
     BACnetConfirmedRequestPDU,
-    BACnetUnconfirmedRequestPDU(UnconfirmedServiceChoice),
+    BACnetUnconfirmedRequestPDU,
     BACnetSimpleACKPDU,
     BACnetComplexACKPDU,
     Segment,
-    Error(ErrorPDU),
+    Error,
     RejectPDU,
     Abort,
     Reserved,
+}
+
+impl From<u8> for PDUType {
+    fn from(b: u8) -> Self {
+        match b & 0xF0 {
+            0x00 => Self::BACnetConfirmedRequestPDU,
+            0x10 => Self::BACnetUnconfirmedRequestPDU,
+            0x20 => Self::BACnetSimpleACKPDU,
+            0x30 => Self::BACnetComplexACKPDU,
+            0x40 => Self::Segment,
+            0x50 => Self::Error,
+            0x60 => Self::RejectPDU,
+            0x70 => Self::Abort,
+            0x80..=0xF0 => Self::Reserved,
+            _ => unsafe { core::hint::unreachable_unchecked() },
+        }
+    }
 }
 
 pub enum ConfirmedServiceChoice {
