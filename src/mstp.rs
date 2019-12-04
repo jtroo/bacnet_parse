@@ -13,7 +13,7 @@ pub fn parse_mstp_skip_crc_compute(bytes: &[u8]) -> Result<MSTPFrameNoCrcs, Erro
         ));
     }
     let mut frame = MSTPFrameNoCrcs::default();
-    frame.frame_type = bytes[2].into();
+    frame.frame_type = bytes[2];
     frame.dst_mac = bytes[3];
     frame.src_mac = bytes[4];
     frame.len = u16::from_be_bytes(*array_ref!(bytes, 5, 2));
@@ -55,7 +55,7 @@ pub fn parse_mstp(bytes: &[u8]) -> Result<MSTPFrame, Error> {
 
 #[derive(Default)]
 pub struct MSTPFrameNoCrcs<'a> {
-    frame_type: MSTPFrameType,
+    frame_type: u8,
     dst_mac: u8,
     src_mac: u8,
     len: u16,
@@ -63,7 +63,7 @@ pub struct MSTPFrameNoCrcs<'a> {
 }
 
 pub struct MSTPFrame<'a> {
-    frame_type: MSTPFrameType,
+    frame_type: u8,
     dst_mac: u8,
     src_mac: u8,
     len: u16,
@@ -73,6 +73,9 @@ pub struct MSTPFrame<'a> {
 
 impl<'a> MSTPFrameNoCrcs<'a> {
     pub fn frame_type(&self) -> MSTPFrameType {
+        self.frame_type.into()
+    }
+    pub fn frame_type_byte(&self) -> u8 {
         self.frame_type
     }
     pub fn dst_mac(&self) -> u8 {
@@ -91,7 +94,7 @@ impl<'a> MSTPFrameNoCrcs<'a> {
 
 impl<'a> MSTPFrame<'a> {
     pub fn frame_type(&self) -> MSTPFrameType {
-        self.frame_type
+        self.frame_type.into()
     }
     pub fn dst_mac(&self) -> u8 {
         self.dst_mac
@@ -131,37 +134,37 @@ impl CRCs {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum MSTPFrameType {
-    Token(u8),
-    PollforMaster(u8),
-    ReplyToPollForMaster(u8),
-    TestRequest(u8),
-    TestResponse(u8),
-    BACnetDataExpectingReply(u8),
-    BACnetDataNotExpectingReply(u8),
-    ReplyPostponed(u8),
-    Reserved(u8),
-    Proprietary(u8),
+    Token,
+    PollforMaster,
+    ReplyToPollForMaster,
+    TestRequest,
+    TestResponse,
+    BACnetDataExpectingReply,
+    BACnetDataNotExpectingReply,
+    ReplyPostponed,
+    Reserved,
+    Proprietary,
 }
 
 impl Default for MSTPFrameType {
     fn default() -> Self {
-        Self::Reserved(127)
+        Self::Reserved
     }
 }
 
 impl From<u8> for MSTPFrameType {
     fn from(b: u8) -> Self {
         match b {
-            0 => Self::Token(b),
-            1 => Self::PollforMaster(b),
-            2 => Self::ReplyToPollForMaster(b),
-            3 => Self::TestRequest(b),
-            4 => Self::TestResponse(b),
-            5 => Self::BACnetDataExpectingReply(b),
-            6 => Self::BACnetDataNotExpectingReply(b),
-            7 => Self::ReplyPostponed(b),
-            8..=127 => Self::Reserved(b),
-            128..=255 => Self::Proprietary(b),
+            0 => Self::Token,
+            1 => Self::PollforMaster,
+            2 => Self::ReplyToPollForMaster,
+            3 => Self::TestRequest,
+            4 => Self::TestResponse,
+            5 => Self::BACnetDataExpectingReply,
+            6 => Self::BACnetDataNotExpectingReply,
+            7 => Self::ReplyPostponed,
+            8..=127 => Self::Reserved,
+            128..=255 => Self::Proprietary,
         }
     }
 }
@@ -242,7 +245,7 @@ mod tests {
             0x19, 0x55, 0x3e, 0x44, 0x41, 0xe8, 0x00, 0x01, 0x3f, 0x49, 0x09, 0xc9, 0x6f,
         ];
         let frame = parse_mstp_skip_crc_compute(DATA).unwrap();
-        assert_eq!(frame.frame_type(), MSTPFrameType::BACnetDataExpectingReply(5));
+        assert_eq!(frame.frame_type(), MSTPFrameType::BACnetDataExpectingReply);
         assert_eq!(frame.dst_mac(), 12);
         assert_eq!(frame.src_mac(), 127);
         assert_eq!(frame.data_len(), 31);

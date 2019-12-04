@@ -89,7 +89,7 @@
 //! assert_eq!(actual, expected);
 //! assert_eq!(actual, 0x6fc9);
 //!
-//! assert_eq!(frame.frame_type(), MSTPFrameType::BACnetDataExpectingReply(5));
+//! assert_eq!(frame.frame_type(), MSTPFrameType::BACnetDataExpectingReply);
 //! let npdu = frame.npdu().as_ref().expect("npdu");
 //!
 //! let src = npdu.src().as_ref().expect("src");
