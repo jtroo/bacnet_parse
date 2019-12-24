@@ -1,26 +1,28 @@
 use crate::Error;
+mod unconfirmed_request_pdu;
+use unconfirmed_request_pdu::*;
 
 pub fn parse_apdu(bytes: &[u8]) -> Result<APDU, Error> {
     if bytes.is_empty() {
         return Err(Error::Length("empty apdu bytes"));
     }
-    Ok(APDU{bytes, pdu_type: bytes[0]})
+    Ok(APDU {
+        bytes,
+        pdu_type: bytes[0],
+    })
 }
 
 pub struct APDU<'a> {
-    bytes: &'a [u8],
+    pub bytes: &'a [u8],
     pdu_type: u8,
 }
 
-impl <'a>APDU<'a> {
+impl<'a> APDU<'a> {
     pub fn pdu_type(&self) -> PDUType {
         self.pdu_type.into()
     }
     pub fn pdu_type_byte(&self) -> u8 {
         self.pdu_type
-    }
-    pub fn bytes(&self) -> &'a[u8] {
-        self.bytes
     }
 }
 
@@ -77,29 +79,6 @@ impl From<u8> for ConfirmedServiceChoice {
             0x14 => Self::ReinitializeDevice,
             _ => Self::Unknown,
         }
-    }
-}
-
-pub enum UnconfirmedServiceChoice {
-    IAm,
-    IHave,
-    WhoHas,
-    WhoIs,
-    Unknown,
-}
-
-impl UnconfirmedServiceChoice {
-    fn parse(b: &[u8]) -> Result<Self, Error> {
-        if b.is_empty() {
-            return Err(Error::Length("wrong len for UnconfirmedServiceChoice"));
-        }
-        Ok(match b[1] {
-            0x00 => Self::IAm,
-            0x01 => Self::IHave,
-            0x07 => Self::WhoHas,
-            0x08 => Self::WhoIs,
-            _ => Self::Unknown,
-        })
     }
 }
 

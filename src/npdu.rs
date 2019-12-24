@@ -52,7 +52,7 @@ pub struct NPDU<'a> {
     ncpi_control: u8,
     dst: Option<DstHopCount<'a>>,
     src: Option<NetAddr<'a>>,
-    payload: &'a [u8],
+    pub payload: &'a [u8],
 }
 
 impl<'a> NPDU<'a> {
