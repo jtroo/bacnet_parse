@@ -12,7 +12,7 @@ impl Tag {
     pub fn parse(bytes: &[u8]) -> Result<(&[u8], Self), Error> {
         let (tag_bytes, number) = parse_tag_number(bytes)?;
         if is_extended_value(bytes[0]) {
-            if tag_bytes.len() < 1 {
+            if tag_bytes.is_empty() {
                 return Err(Error::Length("parsing tag"));
             }
             match bytes[0] {
@@ -55,7 +55,7 @@ fn parse_tag_number(bytes: &[u8]) -> Result<(&[u8], u8), Error> {
             Ok((&bytes[2..], bytes[1]))
         }
     } else {
-        if bytes.len() < 1 {
+        if bytes.is_empty() {
             Err(Error::Length("cannot read tag"))
         } else {
             Ok((&bytes[1..], bytes[0] >> 4))
