@@ -33,10 +33,14 @@ pub struct WhoIsLimits {
 impl WhoIsLimits {
     fn parse(apdu: &APDU) -> Option<Self> {
         match apdu.bytes.len() {
+            // Safety:
+            // This must called from UnconfirmedServiceChoice which validates that this must be an
+            // APDU frame with at least 2 payload bytes available.
             0 | 1 => unsafe { core::hint::unreachable_unchecked() },
             2 => None,
             _ => {
                 let (post_tag_bytes, tag) = Tag::parse(&apdu.bytes[2..]).ok()?;
+                // TODO: do something with this tag
                 Some(Self {
                     low_limit: 0,
                     high_limit: 0,

@@ -53,6 +53,8 @@ impl From<u8> for PDUType {
             0x60 => Self::RejectPDU,
             0x70 => Self::Abort,
             0x80..=0xF0 => Self::Reserved,
+            // Safety: the byte is bitwise ANDed  with 0xF0, thus anything without a zero in the
+            // lower nibble need not be checked.
             _ => unsafe { core::hint::unreachable_unchecked() },
         }
     }
