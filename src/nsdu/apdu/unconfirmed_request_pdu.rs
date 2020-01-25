@@ -1,4 +1,5 @@
 use super::{Tag, APDU};
+use crate::nsdu::parse_unsigned;
 use crate::Error;
 
 pub enum UnconfirmedServiceChoice {
@@ -19,7 +20,7 @@ impl UnconfirmedServiceChoice {
             0x00 => Self::IAm,
             0x01 => Self::IHave,
             0x07 => Self::WhoHas,
-            0x08 => Self::WhoIs(WhoIsLimits::parse(apdu)),
+            0x08 => Self::WhoIs(WhoIsLimits::parse(apdu)?),
             _ => Self::Unknown,
         })
     }
@@ -31,6 +32,7 @@ pub struct WhoIsLimits {
 }
 
 impl WhoIsLimits {
+    /// Attempt to parse WhoIsLimits from an APDU payload.
     fn parse(apdu: &APDU) -> Result<Option<Self>, Error> {
         match apdu.bytes.len() {
             // Safety:
@@ -39,19 +41,22 @@ impl WhoIsLimits {
             0 | 1 => unsafe { core::hint::unreachable_unchecked() },
             2 => Ok(None),
             _ => {
-                let (post_tag_bytes, tag) = Tag::parse(&apdu.bytes[2..]).ok()?;
+                // 1. parse a tag, starting from after the pdu type and service choice
+                // 2. parse an unsigned value. The tag's value here is the length of the unsigned
+                //    integer. This is the low value.
+                // 3. parse another tag
+                // 4. parse another unsigned value. This is the high value.
+                let (bytes, tag) = Tag::parse(&apdu.bytes[2..])?;
                 if tag.number != 0 {
                     return Err(Error::InvalidValue("Non-zero tag number in WhoIs"));
                 }
-                // TODOs:
-                // 1. parse an unsigned value. The tag's value here is the length of the
-                // unsigned integer.
-                // 2. parse another tag
-                // 3. parse another unsigned value
-                Some(Self {
+                let (bytes, low_limit) = parse_unsigned(bytes, tag.value)?;
+                let (bytes, tag) = Tag::parse(bytes)?;
+                let (bytes, high_limit) = parse_unsigned(bytes, tag.value)?;
+                Ok(Some(Self {
                     low_limit: 0,
                     high_limit: 0,
-                })
+                }))
             }
         }
     }

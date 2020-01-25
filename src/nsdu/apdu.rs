@@ -145,3 +145,9 @@ impl ErrorPDU {
         self.error_code
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn simple_apdu_test() {}
+}

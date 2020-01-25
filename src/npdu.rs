@@ -1,4 +1,4 @@
-use super::Error;
+use crate::Error;
 use arrayref::array_ref;
 
 pub fn parse_npdu(bytes: &[u8]) -> Result<NPDU, Error> {
