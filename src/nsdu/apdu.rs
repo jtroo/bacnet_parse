@@ -148,6 +148,26 @@ impl ErrorPDU {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::*;
+
     #[test]
-    fn simple_apdu_test() {}
+    fn basic_whois_test() {
+        let bytes: &[u8] = &[
+            0x81, 0x0b, 0x00, 0x1b, 0x01, 0x28, 0xff, 0xff, 0x00, 0x27, 0x2f, 0x06, 0x00, 0x40,
+            0xae, 0x04, 0xd3, 0xff, 0xfe, 0x10, 0x08, 0x0a, 0x0b, 0x54, 0x1a, 0x0b, 0x54,
+        ];
+        let bvlc = parse_bvlc(&bytes).unwrap();
+        let npdu = bvlc.npdu().as_ref().unwrap();
+        let apdu = parse_apdu(npdu.payload()).unwrap();
+        let ucs = UnconfirmedServiceChoice::parse(&apdu).unwrap();
+        match ucs {
+            UnconfirmedServiceChoice::WhoIs(lims) => {
+                let lims = lims.unwrap();
+                assert_eq!(lims.low_limit, 2900);
+                assert_eq!(lims.high_limit, 2900);
+            }
+            _ => panic!("should be WhoIs"),
+        }
+    }
 }

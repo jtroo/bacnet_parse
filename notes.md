@@ -1,6 +1,4 @@
 Current TODOs:
-* Complete the parsing of a WHO-IS frame - DONE
-  * Need to test this parsing
 * Complete the parsing of an I-AM frame
 
 code below is from the bacnet stack - apdu handling

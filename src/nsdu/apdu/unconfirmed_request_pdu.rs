@@ -11,7 +11,7 @@ pub enum UnconfirmedServiceChoice {
 }
 
 impl UnconfirmedServiceChoice {
-    fn parse(apdu: &APDU) -> Result<Self, Error> {
+    pub fn parse(apdu: &APDU) -> Result<Self, Error> {
         let bytes = apdu.bytes;
         if bytes.len() < 2 {
             return Err(Error::Length("wrong len for UnconfirmedServiceChoice"));
@@ -27,8 +27,8 @@ impl UnconfirmedServiceChoice {
 }
 
 pub struct WhoIsLimits {
-    low_limit: i32,
-    high_limit: i32,
+    pub low_limit: u32,
+    pub high_limit: u32,
 }
 
 impl WhoIsLimits {
@@ -53,10 +53,7 @@ impl WhoIsLimits {
                 let (bytes, low_limit) = parse_unsigned(bytes, tag.value)?;
                 let (bytes, tag) = Tag::parse(bytes)?;
                 let (bytes, high_limit) = parse_unsigned(bytes, tag.value)?;
-                Ok(Some(Self {
-                    low_limit: 0,
-                    high_limit: 0,
-                }))
+                Ok(Some(Self { low_limit, high_limit }))
             }
         }
     }
