@@ -1,8 +1,6 @@
 use crate::Error;
 mod unconfirmed_request_pdu;
-use unconfirmed_request_pdu::*;
 mod tag;
-use tag::*;
 
 pub fn parse_apdu(bytes: &[u8]) -> Result<APDU, Error> {
     if bytes.is_empty() {
@@ -148,7 +146,7 @@ impl ErrorPDU {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{unconfirmed_request_pdu::*, tag::*};
     use crate::*;
 
     #[test]

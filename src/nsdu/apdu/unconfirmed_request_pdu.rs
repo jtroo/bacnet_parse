@@ -1,4 +1,4 @@
-use super::{Tag, APDU};
+use super::{tag::Tag, APDU};
 use crate::nsdu::parse_unsigned;
 use crate::Error;
 
@@ -52,7 +52,7 @@ impl WhoIsLimits {
                 }
                 let (bytes, low_limit) = parse_unsigned(bytes, tag.value)?;
                 let (bytes, tag) = Tag::parse(bytes)?;
-                let (bytes, high_limit) = parse_unsigned(bytes, tag.value)?;
+                let (_, high_limit) = parse_unsigned(bytes, tag.value)?;
                 Ok(Some(Self { low_limit, high_limit }))
             }
         }
