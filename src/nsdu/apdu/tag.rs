@@ -1,6 +1,50 @@
 use crate::Error;
 use arrayref::array_ref;
 
+enum TagType {
+    Null,
+    Boolean,
+    UnsignedInt,
+    SignedInt,
+    Real,
+    Double,
+    OctetString,
+    CharacterString,
+    BitString,
+    Enumerated,
+    Date,
+    Time,
+    ObjectId,
+    Reserve1,
+    Reserve2,
+    Reserve3,
+    Unknown,
+}
+
+impl From<u8> for TagType {
+    fn from(tag_number: u8) -> Self {
+        match tag_number {
+            0 => Self::Null,
+            1 => Self::Boolean,
+            2 => Self::UnsignedInt,
+            3 => Self::SignedInt,
+            4 => Self::Real,
+            5 => Self::Double,
+            6 => Self::OctetString,
+            7 => Self::CharacterString,
+            8 => Self::BitString,
+            9 => Self::Enumerated,
+            10 => Self::Date,
+            11 => Self::Time,
+            12 => Self::ObjectId,
+            13 => Self::Reserve1,
+            14 => Self::Reserve2,
+            15 => Self::Reserve3,
+            _ => Self::Unknown,
+        }
+    }
+}
+
 pub struct Tag {
     pub number: u8,
     pub value: u32,
@@ -44,6 +88,10 @@ impl Tag {
             let value = (bytes[0] & 0x07).into();
             Ok((tag_bytes, Self { number, value }))
         }
+    }
+
+    pub fn tag_type(&self) -> TagType {
+        self.number.into()
     }
 }
 

@@ -53,7 +53,35 @@ impl WhoIsLimits {
                 let (bytes, low_limit) = parse_unsigned(bytes, tag.value)?;
                 let (bytes, tag) = Tag::parse(bytes)?;
                 let (_, high_limit) = parse_unsigned(bytes, tag.value)?;
-                Ok(Some(Self { low_limit, high_limit }))
+                Ok(Some(Self {
+                    low_limit,
+                    high_limit,
+                }))
+            }
+        }
+    }
+}
+
+pub struct IAmData {}
+
+impl IAmData {
+    /// Attempt to parse WhoIsLimits from an APDU payload.
+    fn parse(apdu: &APDU) -> Result<Option<Self>, Error> {
+        match apdu.bytes.len() {
+            // Safety:
+            // This must called from UnconfirmedServiceChoice which validates that this must be an
+            // APDU frame with at least 2 payload bytes available.
+            0 | 1 => unsafe { core::hint::unreachable_unchecked() },
+            _ => {
+                // 1. parse a tag, type should be ObjectId
+                // 2. decode an object ID - this is the device id
+                // 3. parse a tag, type should be UnsignedInt
+                // 4. decode an unsigned int - this is "Max APDU" - TODO: what does that mean?
+                // 5. parse a tag, type should be enumerated
+                // 6. decode an enumerated value - this is segmentation support
+                // 7. parse a tag, type should be UnsignedInt
+                // 8. decode an enumerated value - this is the vendor ID
+                unimplemented!("TODO");
             }
         }
     }
