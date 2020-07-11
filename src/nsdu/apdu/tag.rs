@@ -1,7 +1,7 @@
 use crate::Error;
 use arrayref::array_ref;
 
-enum TagType {
+pub enum TagType {
     Null,
     Boolean,
     UnsignedInt,
@@ -102,12 +102,10 @@ fn parse_tag_number(bytes: &[u8]) -> Result<(&[u8], u8), Error> {
         } else {
             Ok((&bytes[2..], bytes[1]))
         }
+    } else if bytes.is_empty() {
+        Err(Error::Length("cannot read tag"))
     } else {
-        if bytes.is_empty() {
-            Err(Error::Length("cannot read tag"))
-        } else {
-            Ok((&bytes[1..], bytes[0] >> 4))
-        }
+        Ok((&bytes[1..], bytes[0] >> 4))
     }
 }
 

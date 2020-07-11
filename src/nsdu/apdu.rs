@@ -1,6 +1,7 @@
 use crate::Error;
 mod tag;
 mod unconfirmed_request_pdu;
+use unconfirmed_request_pdu::*;
 
 pub fn parse_apdu(bytes: &[u8]) -> Result<APDU, Error> {
     if bytes.is_empty() {
@@ -23,6 +24,22 @@ impl<'a> APDU<'a> {
     }
     pub fn pdu_type_byte(&self) -> u8 {
         self.pdu_type
+    }
+    pub fn parse_unconfirmed_request_pdu(&self) -> Result<UnconfirmedServiceChoice, Error> {
+        match self.pdu_type() {
+            PDUType::BACnetUnconfirmedRequestPDU => UnconfirmedServiceChoice::parse(self),
+            _ => Err(Error::InvalidValue(
+                "APDU is not a BACnetUnconfirmedRequestPDU",
+            )),
+        }
+    }
+    pub fn parse_error(&self) -> Result<ErrorPDU, Error> {
+        match self.pdu_type() {
+            PDUType::Error => ErrorPDU::parse(self),
+            _ => Err(Error::InvalidValue(
+                "APDU is not a BACnetUnconfirmedRequestPDU",
+            )),
+        }
     }
 }
 
@@ -123,7 +140,8 @@ pub struct ErrorPDU {
 }
 
 impl ErrorPDU {
-    fn parse(b: &[u8]) -> Result<Self, Error> {
+    fn parse(apdu: &APDU) -> Result<Self, Error> {
+        let b = apdu.bytes;
         if b.len() != 3 {
             return Err(Error::Length("wrong len for ErrorPDU"));
         }
@@ -146,7 +164,7 @@ impl ErrorPDU {
 
 #[cfg(test)]
 mod tests {
-    use super::{tag::*, unconfirmed_request_pdu::*};
+    use super::unconfirmed_request_pdu::*;
     use crate::*;
 
     #[test]
