@@ -25,7 +25,7 @@ fn parse_unsigned(bytes: &[u8], sz: u32) -> Result<(&[u8], u32), Error> {
         3 => ((bytes[0] as u32) << 16 | (bytes[1] as u32) << 8 | bytes[2] as u32),
         4 => u32::from_be_bytes(*array_ref!(bytes, 0, 4)),
         // Safety: this value is checked at the beginning of the fn.
-        _ => unsafe { core::hint::unreachable_unchecked() },
+        _ => unreachable!("logic error"),
     };
     Ok((&bytes[sz..], val))
 }

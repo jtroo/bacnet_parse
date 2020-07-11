@@ -1,6 +1,6 @@
 use crate::Error;
-mod unconfirmed_request_pdu;
 mod tag;
+mod unconfirmed_request_pdu;
 
 pub fn parse_apdu(bytes: &[u8]) -> Result<APDU, Error> {
     if bytes.is_empty() {
@@ -53,7 +53,7 @@ impl From<u8> for PDUType {
             0x80..=0xF0 => Self::Reserved,
             // Safety: the byte is bitwise ANDed  with 0xF0, thus anything without a zero in the
             // lower nibble need not be checked.
-            _ => unsafe { core::hint::unreachable_unchecked() },
+            _ => unreachable!("logic error!"),
         }
     }
 }
@@ -146,7 +146,7 @@ impl ErrorPDU {
 
 #[cfg(test)]
 mod tests {
-    use super::{unconfirmed_request_pdu::*, tag::*};
+    use super::{tag::*, unconfirmed_request_pdu::*};
     use crate::*;
 
     #[test]

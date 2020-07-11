@@ -81,7 +81,7 @@ impl<'a> NPDU<'a> {
             3 => NCPIPriority::LifeSafety,
             // Safety:
             // The byte is bitwise ANDed with 3, i.e. 0b11, which has a max value of 3.
-            _ => unsafe { core::hint::unreachable_unchecked() },
+            _ => unreachable!("logic error"),
         }
     }
 

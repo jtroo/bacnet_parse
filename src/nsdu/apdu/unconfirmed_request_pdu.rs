@@ -38,7 +38,7 @@ impl WhoIsLimits {
             // Safety:
             // This must called from UnconfirmedServiceChoice which validates that this must be an
             // APDU frame with at least 2 payload bytes available.
-            0 | 1 => unsafe { core::hint::unreachable_unchecked() },
+            0 | 1 => unreachable!("logic error"),
             2 => Ok(None),
             _ => {
                 // 1. parse a tag, starting from after the pdu type and service choice
@@ -71,7 +71,7 @@ impl IAmData {
             // Safety:
             // This must called from UnconfirmedServiceChoice which validates that this must be an
             // APDU frame with at least 2 payload bytes available.
-            0 | 1 => unsafe { core::hint::unreachable_unchecked() },
+            0 | 1 => unreachable!("logic error"),
             _ => {
                 // 1. parse a tag, type should be ObjectId
                 // 2. decode an object ID - this is the device id
